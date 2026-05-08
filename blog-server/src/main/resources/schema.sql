@@ -69,4 +69,4 @@ INSERT INTO blog_tag (name) VALUES
 
 -- 插入默认管理员用户 (密码: admin123, bcrypt加密)
 INSERT INTO blog_user (username, password, nickname) VALUES
-('admin', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '站长');
+('admin', '$2a$10$ds7mR3/c.ggoEBRXBlDx9e.RXLhnqC9EIMw6Pnp4JcZBCTbUUkbhe', '站长');

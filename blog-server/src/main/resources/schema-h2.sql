@@ -69,4 +69,4 @@ MERGE INTO blog_tag (id, name) KEY(id) VALUES (4, 'MySQL');
 MERGE INTO blog_tag (id, name) KEY(id) VALUES (5, '前端');
 MERGE INTO blog_tag (id, name) KEY(id) VALUES (6, '后端');
 
-MERGE INTO blog_user (id, username, password, nickname) KEY(id) VALUES (1, 'admin', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '站长');
+MERGE INTO blog_user (id, username, password, nickname) KEY(id) VALUES (1, 'admin', '$2a$10$ds7mR3/c.ggoEBRXBlDx9e.RXLhnqC9EIMw6Pnp4JcZBCTbUUkbhe', '站长');
