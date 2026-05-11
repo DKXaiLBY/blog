@@ -22,8 +22,8 @@ export function useTheme() {
     const codeLink = document.getElementById('code-theme-link')
     if (codeLink) {
       codeLink.href = t === 'dark'
-        ? 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css'
-        : 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css'
+        ? '/hljs/a11y-dark.css'
+        : '/hljs/github.css'
     }
   }
 

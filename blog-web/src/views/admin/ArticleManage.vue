@@ -147,13 +147,14 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { getAdminArticles, getAdminArticleDetail, createArticle, updateArticle, deleteArticle, batchDeleteArticles, batchUpdateStatus } from '@/api/article'
 import { getCategories } from '@/api/category'
 import { getTags } from '@/api/tag'
 import request from '@/api/request'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { useAutoSave } from '@/composables/useAutoSave'
 
 const router = useRouter()
 const articles = ref([])
@@ -174,8 +175,8 @@ const isEdit = ref(false)
 const editingId = ref(null)
 const selectedIds = ref([])
 
-let draftTimer = null
 const DRAFT_KEY = 'blog-draft-article'
+const draft = useAutoSave(form, DRAFT_KEY, 30000)
 
 const defaultForm = () => ({
   title: '',
@@ -222,36 +223,8 @@ const fetchMeta = async () => {
 
 const goDetail = (id) => router.push(`/article/${id}`)
 
-const saveDraft = () => {
-  if (!dialogVisible.value) return
-  if (!form.value.title.trim() && !form.value.content.trim()) return
-  try {
-    localStorage.setItem(DRAFT_KEY, JSON.stringify({
-      ...form.value,
-      editingId: editingId.value,
-      isEdit: isEdit.value,
-      savedAt: new Date().toISOString()
-    }))
-  } catch { /* ignore */ }
-}
-
-const restoreDraft = () => {
-  try {
-    const raw = localStorage.getItem(DRAFT_KEY)
-    if (!raw) return null
-    const draft = JSON.parse(raw)
-    if (!draft.title && !draft.content) return null
-    return draft
-  } catch { return null }
-}
-
-const clearDraft = () => {
-  localStorage.removeItem(DRAFT_KEY)
-}
-
 const onDialogOpened = () => {
-  draftTimer = setInterval(saveDraft, 30000)
-  // Ctrl+S shortcut
+  draft.start()
   const onKeyDown = (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 's') {
       e.preventDefault()
@@ -259,12 +232,11 @@ const onDialogOpened = () => {
     }
   }
   document.addEventListener('keydown', onKeyDown)
-  // Store cleanup ref
   form.value._keydownCleanup = () => document.removeEventListener('keydown', onKeyDown)
 }
 
 const onDialogClosed = () => {
-  if (draftTimer) { clearInterval(draftTimer); draftTimer = null }
+  draft.stop()
   if (form.value._keydownCleanup) {
     form.value._keydownCleanup()
     delete form.value._keydownCleanup
@@ -312,7 +284,7 @@ const handleSave = async () => {
       await createArticle(form.value)
       ElMessage.success('发布成功')
     }
-    clearDraft()
+    draft.clear()
     dialogVisible.value = false
     fetchArticles()
   } catch { /* handled */ }
@@ -381,34 +353,16 @@ const handleEditorUpload = async (event, insertImage, files) => {
   }
 }
 
-// Check for draft restore when entering create mode
 watch(dialogVisible, (val) => {
-  if (val && !isEdit.value) {
-    const draft = restoreDraft()
-    if (draft) {
-      ElMessageBox.confirm('检测到未保存的草稿，是否恢复?', '恢复草稿', {
-        confirmButtonText: '恢复',
-        cancelButtonText: '忽略',
-        type: 'info'
-      }).then(() => {
-        form.value = {
-          title: draft.title || '',
-          summary: draft.summary || '',
-          content: draft.content || '',
-          coverImage: draft.coverImage || '',
-          categoryId: draft.categoryId ?? null,
-          tagIds: draft.tagIds ?? [],
-          series: draft.series || '',
-          status: draft.status ?? 1,
-          isTop: draft.isTop ?? 0
-        }
-        isEdit.value = draft.isEdit || false
-        editingId.value = draft.editingId || null
-        ElMessage.success('草稿已恢复')
-      }).catch(() => {
-        clearDraft()
-      })
-    }
+  if (val && !isEdit.value && draft.restore()) {
+    ElMessageBox.confirm('检测到未保存的草稿，是否恢复?', '恢复草稿', {
+      confirmButtonText: '恢复',
+      cancelButtonText: '忽略',
+      type: 'info'
+    }).catch(() => {
+      draft.clear()
+      form.value = defaultForm()
+    })
   }
 })
 
@@ -417,9 +371,6 @@ onMounted(() => {
   fetchMeta()
 })
 
-onUnmounted(() => {
-  if (draftTimer) clearInterval(draftTimer)
-})
 </script>
 
 <style scoped>

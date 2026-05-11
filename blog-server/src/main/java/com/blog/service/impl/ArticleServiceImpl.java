@@ -307,6 +307,18 @@ public class ArticleServiceImpl implements ArticleService {
         }
     }
 
+    private void setWordStats(ArticleVO vo, String content) {
+        if (content == null || content.isBlank()) {
+            vo.setWordCount(0);
+            vo.setReadingTime(1);
+            return;
+        }
+        String text = content.replaceAll("[#*\\-\\s`>\\[\\]()!|~\\n]", "");
+        int wordCount = text.length();
+        vo.setWordCount(wordCount);
+        vo.setReadingTime(Math.max(1, wordCount / 300));
+    }
+
     private PageVO<ArticleVO> buildPageVO(IPage<Article> iPage, int page, int size) {
         List<Article> articles = iPage.getRecords();
         if (articles.isEmpty()) {
@@ -350,6 +362,7 @@ public class ArticleServiceImpl implements ArticleService {
             vo.setSeries(a.getSeries());
             vo.setCreatedAt(a.getCreatedAt());
             vo.setUpdatedAt(a.getUpdatedAt());
+            setWordStats(vo, a.getContent());
 
             vo.setCategoryId(a.getCategoryId());
             if (a.getCategoryId() != null) {
@@ -410,6 +423,7 @@ public class ArticleServiceImpl implements ArticleService {
         vo.setScheduledPublishAt(article.getScheduledPublishAt());
         vo.setCreatedAt(article.getCreatedAt());
         vo.setUpdatedAt(article.getUpdatedAt());
+        setWordStats(vo, article.getContent());
 
         vo.setCategoryId(article.getCategoryId());
         if (article.getCategoryId() != null) {

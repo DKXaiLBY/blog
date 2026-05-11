@@ -58,7 +58,7 @@ public class CommonController {
     }
 
     @PostMapping("/comments")
-    public Result<?> addComment(@Valid @RequestBody CommentRequest request) {
+    public Result<Void> addComment(@Valid @RequestBody CommentRequest request) {
         commentService.addComment(request);
         return Result.success();
     }
@@ -103,12 +103,12 @@ public class CommonController {
     }
 
     @GetMapping("/friends")
-    public Result<?> getFriends() {
+    public Result<List<FriendLink>> getFriends() {
         return Result.success(friendLinkService.listAll());
     }
 
     @PostMapping("/friends/apply")
-    public Result<?> applyFriend(@RequestBody FriendLink link) {
+    public Result<Void> applyFriend(@RequestBody FriendLink link) {
         link.setStatus(0);
         link.setSortOrder(0);
         friendLinkService.create(link);
@@ -116,7 +116,7 @@ public class CommonController {
     }
 
     @PostMapping("/subscribe")
-    public Result<?> subscribe(@RequestBody Map<String, String> body) {
+    public Result<Void> subscribe(@RequestBody Map<String, String> body) {
         String email = body.get("email");
         if (email == null || email.isBlank()) {
             throw new BadRequestException("邮箱不能为空");
@@ -126,13 +126,13 @@ public class CommonController {
     }
 
     @GetMapping("/subscribe/verify")
-    public Result<?> verifySubscribe(@RequestParam String token) {
+    public Result<String> verifySubscribe(@RequestParam String token) {
         subscriberService.verify(token);
         return Result.success("订阅确认成功！");
     }
 
     @PostMapping("/unsubscribe")
-    public Result<?> unsubscribe(@RequestBody Map<String, String> body) {
+    public Result<Void> unsubscribe(@RequestBody Map<String, String> body) {
         String email = body.get("email");
         if (email == null || email.isBlank()) {
             throw new BadRequestException("邮箱不能为空");

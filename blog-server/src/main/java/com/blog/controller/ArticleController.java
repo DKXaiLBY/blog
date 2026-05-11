@@ -36,7 +36,7 @@ public class ArticleController {
     }
 
     @GetMapping("/archives")
-    public Result<?> archives() {
+    public Result<List<Map<String, Object>>> archives() {
         return Result.success(articleService.listArchives());
     }
 
@@ -46,7 +46,7 @@ public class ArticleController {
     }
 
     @PostMapping("/{id}/like")
-    public Result<?> like(@PathVariable Long id) {
+    public Result<Void> like(@PathVariable Long id) {
         articleService.likeArticle(id);
         return Result.success();
     }

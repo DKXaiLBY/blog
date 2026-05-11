@@ -3,7 +3,7 @@ import { createPinia } from 'pinia'
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 import './style.css'
-import * as ElementPlusIconsVue from '@element-plus/icons-vue'
+import { Search, ArrowUp, Moon, Sunny, ArrowLeft, Star, Collection, Message, Camera } from '@element-plus/icons-vue'
 import VMdEditor from '@kangc/v-md-editor'
 import '@kangc/v-md-editor/lib/style/base-editor.css'
 import githubTheme from '@kangc/v-md-editor/lib/theme/github.js'
@@ -38,7 +38,6 @@ import lazyImage from './directives/lazyImage'
 VMdEditor.use(githubTheme, { Hljs: hljs })
 VMdPreview.use(githubTheme, { Hljs: hljs })
 
-// code theme stylesheet (created dynamically for theme switching)
 const codeThemeLink = document.createElement('link')
 codeThemeLink.rel = 'stylesheet'
 codeThemeLink.id = 'code-theme-link'
@@ -54,7 +53,9 @@ app.use(VMdPreview)
 app.directive('fade-in', fadeIn)
 app.directive('code-copy', codeCopy)
 app.directive('lazy-img', lazyImage)
-for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+
+const icons = { Search, ArrowUp, Moon, Sunny, ArrowLeft, Star, Collection, Message, Camera }
+for (const [key, component] of Object.entries(icons)) {
     app.component(key, component)
 }
 app.mount('#app')

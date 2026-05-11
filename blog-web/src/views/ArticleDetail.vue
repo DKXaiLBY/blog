@@ -217,26 +217,8 @@ const replyHint = computed(() =>
   form.value.parentId ? `回复 @${replyToName.value}` : '写下你的评论...'
 )
 
-const EMOJI = {
-  ':smile:': '😊', ':laughing:': '😆', ':joy:': '😂', ':rofl:': '🤣',
-  ':heart:': '❤️', ':heart_eyes:': '😍', ':kiss:': '😘',
-  ':thumbsup:': '👍', ':thumbsdown:': '👎', ':clap:': '👏',
-  ':+1:': '👍', ':-1:': '👎',
-  ':cry:': '😢', ':sob:': '😭', ':angry:': '😠', ':rage:': '😡',
-  ':ok_hand:': '👌', ':pray:': '🙏', ':muscle:': '💪',
-  ':fire:': '🔥', ':star:': '⭐', ':rocket:': '🚀',
-  ':tada:': '🎉', ':sparkles:': '✨', ':100:': '💯',
-  ':thinking:': '🤔', ':eyes:': '👀', ':wink:': '😉',
-  ':sunglasses:': '😎', ':sweat_smile:': '😅',
-  ':coffee:': '☕', ':beer:': '🍺', ':pizza:': '🍕',
-  ':check:': '✅', ':x:': '❌', ':warning:': '⚠️',
-  ':question:': '❓', ':bulb:': '💡', ':book:': '📖'
-}
-
-const renderEmoji = (text) => {
-  if (!text) return ''
-  return text.replace(/:[\w+-]+:/g, (match) => EMOJI[match] || match)
-}
+import { useEmoji } from '@/composables/useEmoji'
+const { render: renderEmoji } = useEmoji()
 
 const fmtDate = (s) => {
   if (!s) return ''

@@ -168,6 +168,26 @@
       </div>
     </div>
 
+    <!-- Publish Heatmap -->
+    <div class="chart-card" v-if="heatmapDates.length">
+      <h3>发布热力图 (近半年)</h3>
+      <div class="heatmap">
+        <div v-for="(cell, i) in heatmapDates" :key="i"
+             class="heat-cell"
+             :class="'level-' + cell.level"
+             :title="cell.date + (cell.count ? ': ' + cell.count + ' 篇' : ': 无')"></div>
+      </div>
+      <div class="heatmap-legend">
+        <span>少</span>
+        <span class="legend-cell level-0"></span>
+        <span class="legend-cell level-1"></span>
+        <span class="legend-cell level-2"></span>
+        <span class="legend-cell level-3"></span>
+        <span class="legend-cell level-4"></span>
+        <span>多</span>
+      </div>
+    </div>
+
     <div class="quick-actions">
       <h3>快捷操作</h3>
       <div class="actions-row">
@@ -204,6 +224,24 @@ const stats = ref({
 
 const monthlyTrend = ref({})
 const topArticles = ref([])
+const publishDates = ref([])
+const heatmapDates = computed(() => {
+  if (!publishDates.value.length) return []
+  const countMap = {}
+  publishDates.value.forEach(d => { countMap[d] = (countMap[d] || 0) + 1 })
+  const maxCount = Math.max(1, ...Object.values(countMap))
+  const today = new Date()
+  const cells = []
+  for (let i = 180; i >= 0; i--) {
+    const d = new Date(today)
+    d.setDate(d.getDate() - i)
+    const key = d.toISOString().slice(0, 10)
+    const count = countMap[key] || 0
+    const level = count === 0 ? 0 : Math.ceil(count / maxCount * 4)
+    cells.push({ date: key, count, level })
+  }
+  return cells
+})
 
 const monthlyKeys = computed(() => Object.keys(monthlyTrend.value))
 
@@ -225,6 +263,7 @@ onMounted(async () => {
       stats.value = res.data
       monthlyTrend.value = res.data.monthlyTrend || {}
       topArticles.value = res.data.topArticles || []
+      publishDates.value = res.data.publishDates || []
     }
   } catch { /* ignore */ }
 })
@@ -435,4 +474,40 @@ onMounted(async () => {
   .charts-row { grid-template-columns: 1fr; }
   .actions-row { flex-direction: column; }
 }
+
+/* Heatmap */
+.heatmap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  margin-top: 12px;
+}
+.heat-cell {
+  width: 14px;
+  height: 14px;
+  border-radius: 2px;
+  background: var(--bg-tertiary);
+}
+.heat-cell.level-1 { background: rgba(74,222,128,0.25); }
+.heat-cell.level-2 { background: rgba(34,197,94,0.5); }
+.heat-cell.level-3 { background: rgba(34,197,94,0.75); }
+.heat-cell.level-4 { background: #22c55e; }
+.heatmap-legend {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.legend-cell {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+}
+.legend-cell.level-0 { background: var(--bg-tertiary); }
+.legend-cell.level-1 { background: rgba(74,222,128,0.25); }
+.legend-cell.level-2 { background: rgba(34,197,94,0.5); }
+.legend-cell.level-3 { background: rgba(34,197,94,0.75); }
+.legend-cell.level-4 { background: #22c55e; }
 </style>

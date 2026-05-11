@@ -6,6 +6,7 @@ import com.blog.dto.ArticleVO;
 import com.blog.dto.CommentVO;
 import com.blog.dto.PageVO;
 import com.blog.entity.FriendLink;
+import com.blog.entity.Subscriber;
 import com.blog.service.ArticleService;
 import com.blog.service.CommentService;
 import com.blog.service.FriendLinkService;
@@ -53,7 +54,7 @@ public class AdminController {
     }
 
     @PostMapping("/articles")
-    public Result<?> createArticle(@Valid @RequestBody ArticleRequest request,
+    public Result<Void> createArticle(@Valid @RequestBody ArticleRequest request,
                                    HttpServletRequest httpRequest) {
         Long userId = (Long) httpRequest.getAttribute("userId");
         articleService.createArticle(request, userId);
@@ -61,26 +62,26 @@ public class AdminController {
     }
 
     @PutMapping("/articles/{id}")
-    public Result<?> updateArticle(@PathVariable Long id, @Valid @RequestBody ArticleRequest request) {
+    public Result<Void> updateArticle(@PathVariable Long id, @Valid @RequestBody ArticleRequest request) {
         articleService.updateArticle(id, request);
         return Result.success();
     }
 
     @DeleteMapping("/articles/{id}")
-    public Result<?> deleteArticle(@PathVariable Long id) {
+    public Result<Void> deleteArticle(@PathVariable Long id) {
         articleService.deleteArticle(id);
         return Result.success();
     }
 
     @PostMapping("/articles/batch-delete")
-    public Result<?> batchDelete(@RequestBody Map<String, List<Integer>> body) {
+    public Result<Void> batchDelete(@RequestBody Map<String, List<Integer>> body) {
         List<Long> ids = body.get("ids").stream().map(Long::valueOf).toList();
         articleService.batchDelete(ids);
         return Result.success();
     }
 
     @PostMapping("/articles/batch-status")
-    public Result<?> batchUpdateStatus(@RequestBody Map<String, Object> body) {
+    public Result<Void> batchUpdateStatus(@RequestBody Map<String, Object> body) {
         @SuppressWarnings("unchecked")
         List<Long> ids = ((List<Integer>) body.get("ids")).stream().map(Long::valueOf).toList();
         Integer status = (Integer) body.get("status");
@@ -98,20 +99,20 @@ public class AdminController {
     }
 
     @DeleteMapping("/comments/{id}")
-    public Result<?> deleteComment(@PathVariable Long id) {
+    public Result<Void> deleteComment(@PathVariable Long id) {
         commentService.deleteComment(id);
         return Result.success();
     }
 
     @PutMapping("/comments/{id}/status")
-    public Result<?> updateCommentStatus(@PathVariable Long id,
+    public Result<Void> updateCommentStatus(@PathVariable Long id,
                                          @RequestParam Integer status) {
         commentService.updateCommentStatus(id, status);
         return Result.success();
     }
 
     @PutMapping("/user/avatar")
-    public Result<?> updateAvatar(@RequestBody Map<String, String> body,
+    public Result<Void> updateAvatar(@RequestBody Map<String, String> body,
                                   HttpServletRequest httpRequest) {
         Long userId = (Long) httpRequest.getAttribute("userId");
         String avatar = body.get("avatar");
@@ -120,7 +121,7 @@ public class AdminController {
     }
 
     @PutMapping("/user/profile")
-    public Result<?> updateProfile(@RequestBody Map<String, String> body,
+    public Result<Void> updateProfile(@RequestBody Map<String, String> body,
                                    HttpServletRequest httpRequest) {
         Long userId = (Long) httpRequest.getAttribute("userId");
         userService.updateProfile(userId,
@@ -135,7 +136,7 @@ public class AdminController {
     }
 
     @PutMapping("/user/password")
-    public Result<?> changePassword(@RequestBody Map<String, String> body,
+    public Result<Void> changePassword(@RequestBody Map<String, String> body,
                                     HttpServletRequest httpRequest) {
         Long userId = (Long) httpRequest.getAttribute("userId");
         userService.changePassword(userId,
@@ -152,31 +153,31 @@ public class AdminController {
     // === Friend Link management ===
 
     @GetMapping("/friends")
-    public Result<?> listFriends() {
+    public Result<List<FriendLink>> listFriends() {
         return Result.success(friendLinkService.listAdmin());
     }
 
     @PostMapping("/friends")
-    public Result<?> createFriend(@RequestBody FriendLink link) {
+    public Result<Void> createFriend(@RequestBody FriendLink link) {
         friendLinkService.create(link);
         return Result.success();
     }
 
     @PutMapping("/friends/{id}")
-    public Result<?> updateFriend(@PathVariable Long id, @RequestBody FriendLink link) {
+    public Result<Void> updateFriend(@PathVariable Long id, @RequestBody FriendLink link) {
         link.setId(id);
         friendLinkService.update(link);
         return Result.success();
     }
 
     @DeleteMapping("/friends/{id}")
-    public Result<?> deleteFriend(@PathVariable Long id) {
+    public Result<Void> deleteFriend(@PathVariable Long id) {
         friendLinkService.delete(id);
         return Result.success();
     }
 
     @PutMapping("/friends/{id}/status")
-    public Result<?> updateFriendStatus(@PathVariable Long id,
+    public Result<Void> updateFriendStatus(@PathVariable Long id,
                                         @RequestParam Integer status) {
         friendLinkService.updateStatus(id, status);
         return Result.success();
@@ -185,12 +186,12 @@ public class AdminController {
     // === Subscriber management ===
 
     @GetMapping("/subscribers")
-    public Result<?> listSubscribers() {
+    public Result<List<Subscriber>> listSubscribers() {
         return Result.success(subscriberService.listAll());
     }
 
     @DeleteMapping("/subscribers/{id}")
-    public Result<?> deleteSubscriber(@PathVariable Long id) {
+    public Result<Void> deleteSubscriber(@PathVariable Long id) {
         subscriberService.unsubscribeById(id);
         return Result.success();
     }

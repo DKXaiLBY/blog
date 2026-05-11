@@ -16,6 +16,7 @@ import com.blog.service.UserService;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -182,6 +183,13 @@ public class UserServiceImpl implements UserService {
                 .filter(a -> a.getCreatedAt() != null && a.getCreatedAt().isAfter(weekAgo))
                 .count();
         stats.put("thisWeekArticles", thisWeekArticles);
+
+        // Publish dates for calendar heatmap (last 365 days)
+        List<String> publishDates = allArticles.stream()
+                .filter(a -> a.getCreatedAt() != null)
+                .map(a -> a.getCreatedAt().toLocalDate().toString())
+                .toList();
+        stats.put("publishDates", publishDates);
 
         return stats;
     }

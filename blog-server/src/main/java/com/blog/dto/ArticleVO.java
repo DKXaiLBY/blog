@@ -24,6 +24,8 @@ public class ArticleVO {
     // Series info (computed)
     private List<ArticleVO> seriesArticles;
     private Integer seriesIndex;
+    private Integer wordCount;
+    private Integer readingTime;
     private LocalDateTime scheduledPublishAt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

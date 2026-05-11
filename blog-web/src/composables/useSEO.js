@@ -56,4 +56,26 @@ export function useSEO({ title, description, image, publishedAt } = {}) {
   if (publishedAt) {
     setMeta('article:published_time', publishedAt, true)
   }
+
+  // JSON-LD structured data
+  const existing = document.querySelector('script[type="application/ld+json"]')
+  if (existing) existing.remove()
+
+  const ld = {
+    '@context': 'https://schema.org',
+    '@type': title ? 'Article' : 'WebSite',
+    name: pageTitle,
+    description: pageDesc,
+    url: pageUrl
+  }
+  if (title) {
+    ld.headline = title
+    if (publishedAt) ld.datePublished = publishedAt
+    if (image) ld.image = image.startsWith('http') ? image : siteUrl + image
+    ld.author = { '@type': 'Person', name: 'DKX' }
+  }
+  const script = document.createElement('script')
+  script.type = 'application/ld+json'
+  script.textContent = JSON.stringify(ld)
+  document.head.appendChild(script)
 }
