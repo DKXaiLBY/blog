@@ -16,13 +16,10 @@ public class ScheduledTaskService {
     private static final Logger log = LoggerFactory.getLogger(ScheduledTaskService.class);
 
     private final ArticleMapper articleMapper;
-    private final EmailService emailService;
     private final SubscriberService subscriberService;
 
-    public ScheduledTaskService(ArticleMapper articleMapper, EmailService emailService,
-                                SubscriberService subscriberService) {
+    public ScheduledTaskService(ArticleMapper articleMapper, SubscriberService subscriberService) {
         this.articleMapper = articleMapper;
-        this.emailService = emailService;
         this.subscriberService = subscriberService;
     }
 
@@ -39,25 +36,7 @@ public class ScheduledTaskService {
             articleMapper.updateById(article);
             log.info("Published scheduled article: '{}' ({})", article.getTitle(), article.getId());
 
-            // Notify subscribers
-            if (emailService != null) {
-                notifySubscribers(article);
-            }
-        }
-    }
-
-    private void notifySubscribers(Article article) {
-        try {
-            var subscribers = subscriberService.listAll();
-            for (var sub : subscribers) {
-                try {
-                    emailService.sendNewArticleNotice(sub.getEmail(), article.getTitle(), article.getId().toString());
-                } catch (Exception e) {
-                    log.warn("Failed to notify subscriber {}: {}", sub.getEmail(), e.getMessage());
-                }
-            }
-        } catch (Exception e) {
-            log.warn("Failed to list subscribers: {}", e.getMessage());
+            subscriberService.notifySubscribers(article);
         }
     }
 }

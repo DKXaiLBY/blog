@@ -1,19 +1,7 @@
 <template>
   <div class="home-layout">
     <main class="article-list">
-      <!-- Hero Banner -->
-      <div v-if="featured && !loading" class="hero-banner" @click="goDetail(featured.id)">
-        <div class="hero-badge">精选推荐</div>
-        <h2 class="hero-title">{{ featured.title }}</h2>
-        <p class="hero-summary">{{ featured.summary }}</p>
-        <div class="hero-meta">
-          <span>{{ fmtDate(featured.createdAt) }}</span>
-          <span>·</span>
-          <span>{{ featured.categoryName || '未分类' }}</span>
-          <span>·</span>
-          <span>{{ readingTime(featured.content) }} 阅读</span>
-        </div>
-      </div>
+      <HeroBanner :article="featured" />
 
       <!-- Skeleton Loading -->
       <template v-if="loading">
@@ -124,30 +112,13 @@
 
       <SubscribeBox />
 
-      <div class="sidebar-card about-card">
-        <h3>关于我</h3>
-        <div class="about-content">
-          <div class="about-avatar" @click="triggerUpload" :title="isAdmin ? '点击更换头像' : ''">
-            <el-avatar :size="56" :src="profile.avatar" class="avatar-img">
-              {{ profile.nickname?.charAt(0) }}
-            </el-avatar>
-            <div v-if="isAdmin" class="avatar-overlay">
-              <el-icon :size="14"><Camera /></el-icon>
-            </div>
-          </div>
-          <div class="about-name">{{ profile.nickname }}</div>
-          <div class="about-desc">
-            <span class="typewriter">{{ displayText }}</span><span class="cursor">|</span>
-          </div>
-          <div class="about-contact">
-            <a v-for="item in contacts" :key="item.label" :href="item.href" :title="item.label" target="_blank" class="contact-icon">
-              <svg v-if="item.icon === 'github'" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
-              <el-icon v-else-if="item.icon === 'email'" :size="18"><Message /></el-icon>
-              <svg v-else-if="item.icon === 'rss'" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="6.18" cy="17.82" r="2.18"/><path d="M4 4.44v2.83c7.03 0 12.73 5.7 12.73 12.73h2.83c0-8.59-6.97-15.56-15.56-15.56zm0 5.66v2.83c3.9 0 7.07 3.17 7.07 7.07h2.83c0-5.47-4.43-9.9-9.9-9.9z"/></svg>
-            </a>
-          </div>
-        </div>
-      </div>
+      <AboutCard
+        :profile="profile"
+        :display-text="displayText"
+        :contacts="contacts"
+        :is-admin="isAdmin"
+        @upload-avatar="triggerUpload"
+      />
     </aside>
 
     <!-- Hidden file input for avatar upload -->
@@ -156,9 +127,8 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
-import { Message, Camera } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import request from '@/api/request'
 import { getArticles } from '@/api/article'
@@ -168,7 +138,10 @@ import { getUserProfile, updateAvatar } from '@/api/user'
 import { getFeaturedArticle } from '@/api/featured'
 import { useSEO } from '@/composables/useSEO'
 import { useReadingHistory } from '@/composables/useReadingHistory'
+import { useTypewriter } from '@/composables/useTypewriter'
 import { useUserStore } from '@/store/user'
+import HeroBanner from '@/components/HeroBanner.vue'
+import AboutCard from '@/components/AboutCard.vue'
 import SubscribeBox from '@/components/SubscribeBox.vue'
 
 const contacts = ref([
@@ -207,35 +180,7 @@ const phrases = computed(() => {
   }
   return base
 })
-const typewriterIndex = ref(0)
-const charIndex = ref(0)
-const isDeleting = ref(false)
-const displayText = ref('')
-let typeTimer = null
-
-const startTypewriter = () => {
-  const current = phrases.value[typewriterIndex.value]
-  if (isDeleting.value) {
-    displayText.value = current.substring(0, charIndex.value - 1)
-    charIndex.value--
-  } else {
-    displayText.value = current.substring(0, charIndex.value + 1)
-    charIndex.value++
-  }
-
-  let delay = isDeleting.value ? 40 : 80
-
-  if (!isDeleting.value && charIndex.value === current.length) {
-    delay = 2000
-    isDeleting.value = true
-  } else if (isDeleting.value && charIndex.value === 0) {
-    isDeleting.value = false
-    typewriterIndex.value = (typewriterIndex.value + 1) % phrases.value.length
-    delay = 300
-  }
-
-  typeTimer = setTimeout(startTypewriter, delay)
-}
+  const { displayText, start: startTypewriter } = useTypewriter(phrases)
 
 // Reading time
 const readingTime = (content) => {
@@ -353,9 +298,6 @@ onMounted(() => {
   startTypewriter()
 })
 
-onUnmounted(() => {
-  clearTimeout(typeTimer)
-})
 </script>
 
 <style scoped>

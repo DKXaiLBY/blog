@@ -10,7 +10,6 @@ import com.blog.entity.*;
 import com.blog.mapper.*;
 import com.blog.common.exception.NotFoundException;
 import com.blog.service.ArticleService;
-import com.blog.service.EmailService;
 import com.blog.service.SubscriberService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,19 +33,16 @@ public class ArticleServiceImpl implements ArticleService {
     private final TagMapper tagMapper;
     private final ArticleTagMapper articleTagMapper;
     private final UserMapper userMapper;
-    private final EmailService emailService;
     private final SubscriberService subscriberService;
 
     public ArticleServiceImpl(ArticleMapper articleMapper, CategoryMapper categoryMapper,
                                TagMapper tagMapper, ArticleTagMapper articleTagMapper,
-                               UserMapper userMapper, EmailService emailService,
-                               SubscriberService subscriberService) {
+                               UserMapper userMapper, SubscriberService subscriberService) {
         this.articleMapper = articleMapper;
         this.categoryMapper = categoryMapper;
         this.tagMapper = tagMapper;
         this.articleTagMapper = articleTagMapper;
         this.userMapper = userMapper;
-        this.emailService = emailService;
         this.subscriberService = subscriberService;
     }
 
@@ -129,23 +125,8 @@ public class ArticleServiceImpl implements ArticleService {
         saveTags(article.getId(), req.getTagIds());
 
         // Notify subscribers when publishing immediately
-        if (req.getStatus() != null && req.getStatus() == 1 && emailService != null) {
-            notifySubscribers(article);
-        }
-    }
-
-    private void notifySubscribers(Article article) {
-        try {
-            var subscribers = subscriberService.listAll();
-            for (var sub : subscribers) {
-                try {
-                    emailService.sendNewArticleNotice(sub.getEmail(), article.getTitle(), article.getId().toString());
-                } catch (Exception e) {
-                    log.warn("Failed to notify subscriber {}: {}", sub.getEmail(), e.getMessage());
-                }
-            }
-        } catch (Exception e) {
-            log.warn("Failed to list subscribers: {}", e.getMessage());
+        if (req.getStatus() != null && req.getStatus() == 1) {
+            subscriberService.notifySubscribers(article);
         }
     }
 

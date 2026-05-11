@@ -3,6 +3,7 @@ package com.blog.service;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.blog.common.exception.BadRequestException;
 import com.blog.common.exception.NotFoundException;
+import com.blog.entity.Article;
 import com.blog.entity.Subscriber;
 import com.blog.mapper.SubscriberMapper;
 import org.slf4j.Logger;
@@ -78,5 +79,20 @@ public class SubscriberService {
         LambdaQueryWrapper<Subscriber> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Subscriber::getVerified, 1);
         return subscriberMapper.selectCount(wrapper);
+    }
+
+    public void notifySubscribers(Article article) {
+        if (emailService == null) return;
+        try {
+            for (var sub : listAll()) {
+                try {
+                    emailService.sendNewArticleNotice(sub.getEmail(), article.getTitle(), article.getId().toString());
+                } catch (Exception e) {
+                    log.warn("Failed to notify subscriber {}: {}", sub.getEmail(), e.getMessage());
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Failed to list subscribers: {}", e.getMessage());
+        }
     }
 }
