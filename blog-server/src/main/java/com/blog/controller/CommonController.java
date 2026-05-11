@@ -1,6 +1,7 @@
 package com.blog.controller;
 
 import com.blog.common.Result;
+import com.blog.common.exception.BadRequestException;
 import com.blog.dto.CategoryVO;
 import com.blog.dto.CommentRequest;
 import com.blog.dto.TagVO;
@@ -16,6 +17,7 @@ import com.blog.service.FriendLinkService;
 import com.blog.service.SubscriberService;
 import com.blog.service.TagService;
 import com.blog.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.LinkedHashMap;
@@ -56,7 +58,7 @@ public class CommonController {
     }
 
     @PostMapping("/comments")
-    public Result<?> addComment(@RequestBody CommentRequest request) {
+    public Result<?> addComment(@Valid @RequestBody CommentRequest request) {
         commentService.addComment(request);
         return Result.success();
     }
@@ -117,7 +119,7 @@ public class CommonController {
     public Result<?> subscribe(@RequestBody Map<String, String> body) {
         String email = body.get("email");
         if (email == null || email.isBlank()) {
-            throw new RuntimeException("邮箱不能为空");
+            throw new BadRequestException("邮箱不能为空");
         }
         subscriberService.subscribe(email.trim());
         return Result.success();
@@ -133,7 +135,7 @@ public class CommonController {
     public Result<?> unsubscribe(@RequestBody Map<String, String> body) {
         String email = body.get("email");
         if (email == null || email.isBlank()) {
-            throw new RuntimeException("邮箱不能为空");
+            throw new BadRequestException("邮箱不能为空");
         }
         subscriberService.unsubscribe(email.trim());
         return Result.success();

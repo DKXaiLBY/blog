@@ -8,6 +8,7 @@ import com.blog.dto.ArticleVO;
 import com.blog.dto.PageVO;
 import com.blog.entity.*;
 import com.blog.mapper.*;
+import com.blog.common.exception.NotFoundException;
 import com.blog.service.ArticleService;
 import com.blog.service.EmailService;
 import com.blog.service.SubscriberService;
@@ -88,10 +89,13 @@ public class ArticleServiceImpl implements ArticleService {
     public ArticleVO getArticleDetail(Long id) {
         Article article = articleMapper.selectById(id);
         if (article == null || article.getStatus() != 1) {
-            throw new RuntimeException("文章不存在");
+            throw new NotFoundException("文章不存在");
         }
-        article.setViewCount(article.getViewCount() + 1);
-        articleMapper.updateById(article);
+        articleMapper.update(null,
+                new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<Article>()
+                        .eq(Article::getId, id)
+                        .setSql("view_count = view_count + 1"));
+        article.setViewCount(article.getViewCount() != null ? article.getViewCount() + 1 : 1);
         return toArticleVO(article);
     }
 
@@ -99,7 +103,7 @@ public class ArticleServiceImpl implements ArticleService {
     public ArticleVO getArticleDetailForAdmin(Long id) {
         Article article = articleMapper.selectById(id);
         if (article == null) {
-            throw new RuntimeException("文章不存在");
+            throw new NotFoundException("文章不存在");
         }
         return toArticleVO(article);
     }
@@ -150,15 +154,15 @@ public class ArticleServiceImpl implements ArticleService {
     public void updateArticle(Long id, ArticleRequest req) {
         Article article = articleMapper.selectById(id);
         if (article == null) {
-            throw new RuntimeException("文章不存在");
+            throw new NotFoundException("文章不存在");
         }
         article.setTitle(req.getTitle());
         article.setSummary(req.getSummary());
         article.setContent(req.getContent());
         article.setCoverImage(req.getCoverImage());
         article.setCategoryId(req.getCategoryId());
-        article.setStatus(req.getStatus());
-        article.setIsTop(req.getIsTop());
+        if (req.getStatus() != null) article.setStatus(req.getStatus());
+        if (req.getIsTop() != null) article.setIsTop(req.getIsTop());
         article.setSeries(req.getSeries());
         if (req.getScheduledPublishAt() != null && !req.getScheduledPublishAt().isBlank()) {
             article.setScheduledPublishAt(java.time.LocalDateTime.parse(req.getScheduledPublishAt()));
@@ -206,13 +210,12 @@ public class ArticleServiceImpl implements ArticleService {
     public void likeArticle(Long id) {
         Article article = articleMapper.selectById(id);
         if (article == null || article.getStatus() != 1) {
-            throw new RuntimeException("文章不存在");
+            throw new NotFoundException("文章不存在");
         }
-        if (article.getLikeCount() == null) {
-            article.setLikeCount(0);
-        }
-        article.setLikeCount(article.getLikeCount() + 1);
-        articleMapper.updateById(article);
+        articleMapper.update(null,
+                new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<Article>()
+                        .eq(Article::getId, id)
+                        .setSql("like_count = COALESCE(like_count, 0) + 1"));
     }
 
     @Override
@@ -384,14 +387,11 @@ public class ArticleServiceImpl implements ArticleService {
     @Override
     @Transactional
     public void batchUpdateStatus(List<Long> ids, Integer status) {
-        if (ids != null && status != null) {
-            for (Long id : ids) {
-                Article article = articleMapper.selectById(id);
-                if (article != null) {
-                    article.setStatus(status);
-                    articleMapper.updateById(article);
-                }
-            }
+        if (ids != null && status != null && !ids.isEmpty()) {
+            articleMapper.update(null,
+                    new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<Article>()
+                            .in(Article::getId, ids)
+                            .set(Article::getStatus, status));
         }
     }
 
@@ -422,10 +422,15 @@ public class ArticleServiceImpl implements ArticleService {
         List<ArticleTag> ats = articleTagMapper.selectList(atWrapper);
         List<Long> tagIds = new ArrayList<>();
         List<String> tagNames = new ArrayList<>();
-        for (ArticleTag at : ats) {
-            tagIds.add(at.getTagId());
-            Tag tag = tagMapper.selectById(at.getTagId());
-            if (tag != null) tagNames.add(tag.getName());
+        if (!ats.isEmpty()) {
+            java.util.Set<Long> ids = ats.stream().map(ArticleTag::getTagId).collect(Collectors.toSet());
+            java.util.Map<Long, String> tagMap = tagMapper.selectBatchIds(ids).stream()
+                    .collect(Collectors.toMap(Tag::getId, Tag::getName));
+            for (ArticleTag at : ats) {
+                tagIds.add(at.getTagId());
+                String name = tagMap.get(at.getTagId());
+                if (name != null) tagNames.add(name);
+            }
         }
         vo.setTagIds(tagIds);
         vo.setTagNames(tagNames);

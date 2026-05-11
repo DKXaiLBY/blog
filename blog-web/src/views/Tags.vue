@@ -22,7 +22,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { getTags } from '@/api/comment'
+import { getTags } from '@/api/tag'
 import { useSEO } from '@/composables/useSEO'
 
 const router = useRouter()

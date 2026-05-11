@@ -12,6 +12,7 @@ import com.blog.service.FriendLinkService;
 import com.blog.service.SubscriberService;
 import com.blog.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -52,7 +53,7 @@ public class AdminController {
     }
 
     @PostMapping("/articles")
-    public Result<?> createArticle(@RequestBody ArticleRequest request,
+    public Result<?> createArticle(@Valid @RequestBody ArticleRequest request,
                                    HttpServletRequest httpRequest) {
         Long userId = (Long) httpRequest.getAttribute("userId");
         articleService.createArticle(request, userId);
@@ -60,7 +61,7 @@ public class AdminController {
     }
 
     @PutMapping("/articles/{id}")
-    public Result<?> updateArticle(@PathVariable Long id, @RequestBody ArticleRequest request) {
+    public Result<?> updateArticle(@PathVariable Long id, @Valid @RequestBody ArticleRequest request) {
         articleService.updateArticle(id, request);
         return Result.success();
     }

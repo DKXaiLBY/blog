@@ -150,7 +150,8 @@
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { getAdminArticles, getAdminArticleDetail, createArticle, updateArticle, deleteArticle, batchDeleteArticles, batchUpdateStatus } from '@/api/article'
-import { getCategories, getTags } from '@/api/comment'
+import { getCategories } from '@/api/category'
+import { getTags } from '@/api/tag'
 import request from '@/api/request'
 import { ElMessage, ElMessageBox } from 'element-plus'
 

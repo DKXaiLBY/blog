@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.blog.common.JwtUtils;
+import com.blog.common.exception.BadRequestException;
+import com.blog.common.exception.NotFoundException;
 import com.blog.dto.CommentRequest;
 import com.blog.dto.CommentVO;
 import com.blog.dto.PageVO;
@@ -65,24 +67,23 @@ public class CommentServiceImpl implements CommentService {
     @Override
     public void addComment(CommentRequest req) {
         if (req.getAuthorName() == null || req.getAuthorName().isBlank()) {
-            throw new RuntimeException("昵称不能为空");
+            throw new BadRequestException("昵称不能为空");
         }
         if (req.getContent() == null || req.getContent().isBlank()) {
-            throw new RuntimeException("评论内容不能为空");
+            throw new BadRequestException("评论内容不能为空");
         }
-        // Validate captcha before allowing comment (after name/content checks for better UX)
         if (req.getCaptchaKey() == null || req.getCaptchaAnswer() == null) {
-            throw new RuntimeException("请完成验证码");
+            throw new BadRequestException("请完成验证码");
         }
         try {
             int expected = jwtUtils.validateCaptchaToken(req.getCaptchaKey());
             if (expected != req.getCaptchaAnswer()) {
-                throw new RuntimeException("验证码错误");
+                throw new BadRequestException("验证码错误");
             }
-        } catch (RuntimeException e) {
+        } catch (BadRequestException e) {
             throw e;
         } catch (Exception e) {
-            throw new RuntimeException("验证码已过期，请刷新重试");
+            throw new BadRequestException("验证码已过期，请刷新重试");
         }
         Comment comment = new Comment();
         comment.setArticleId(req.getArticleId());
@@ -160,7 +161,7 @@ public class CommentServiceImpl implements CommentService {
     @Override
     public void updateCommentStatus(Long id, Integer status) {
         Comment comment = commentMapper.selectById(id);
-        if (comment == null) throw new RuntimeException("评论不存在");
+        if (comment == null) throw new NotFoundException("评论不存在");
         comment.setStatus(status);
         commentMapper.updateById(comment);
 

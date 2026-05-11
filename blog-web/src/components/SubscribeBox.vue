@@ -20,7 +20,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import { subscribe } from '@/api/comment'
+import { subscribe } from '@/api/subscribe'
 import { ElMessage } from 'element-plus'
 
 const email = ref('')

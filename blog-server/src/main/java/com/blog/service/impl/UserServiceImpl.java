@@ -2,6 +2,9 @@ package com.blog.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.blog.common.JwtUtils;
+import com.blog.common.exception.BadRequestException;
+import com.blog.common.exception.NotFoundException;
+import com.blog.common.exception.UnauthorizedException;
 import com.blog.entity.Article;
 import com.blog.entity.User;
 import com.blog.mapper.ArticleMapper;
@@ -45,7 +48,7 @@ public class UserServiceImpl implements UserService {
         User user = userMapper.selectOne(wrapper);
 
         if (user == null || !BCrypt.checkpw(password, user.getPassword())) {
-            throw new RuntimeException("用户名或密码错误");
+            throw new UnauthorizedException("用户名或密码错误");
         }
 
         return jwtUtils.generateToken(user.getId(), user.getUsername());
@@ -64,7 +67,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void updateAvatar(Long id, String avatar) {
         User user = userMapper.selectById(id);
-        if (user == null) throw new RuntimeException("用户不存在");
+        if (user == null) throw new NotFoundException("用户不存在");
         user.setAvatar(avatar);
         userMapper.updateById(user);
     }
@@ -72,7 +75,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void updateProfile(Long id, String nickname, String tagline, String bio, String skills, String contacts, String projects, String announcement) {
         User user = userMapper.selectById(id);
-        if (user == null) throw new RuntimeException("用户不存在");
+        if (user == null) throw new NotFoundException("用户不存在");
         if (nickname != null) user.setNickname(nickname);
         if (tagline != null) user.setTagline(tagline);
         if (bio != null) user.setBio(bio);
@@ -86,9 +89,9 @@ public class UserServiceImpl implements UserService {
     @Override
     public void changePassword(Long id, String oldPassword, String newPassword) {
         User user = userMapper.selectById(id);
-        if (user == null) throw new RuntimeException("用户不存在");
+        if (user == null) throw new NotFoundException("用户不存在");
         if (!BCrypt.checkpw(oldPassword, user.getPassword())) {
-            throw new RuntimeException("原密码错误");
+            throw new BadRequestException("原密码错误");
         }
         user.setPassword(BCrypt.hashpw(newPassword, BCrypt.gensalt()));
         userMapper.updateById(user);

@@ -3,6 +3,7 @@ package com.blog.controller;
 import com.blog.common.Result;
 import com.blog.dto.LoginRequest;
 import com.blog.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -18,7 +19,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public Result<?> login(@RequestBody LoginRequest request) {
+    public Result<?> login(@Valid @RequestBody LoginRequest request) {
         String token = userService.login(request.getUsername(), request.getPassword());
         return Result.success(Map.of("token", token));
     }

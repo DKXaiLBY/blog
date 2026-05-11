@@ -1,6 +1,9 @@
 package com.blog.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
@@ -8,7 +11,12 @@ import org.springframework.stereotype.Service;
 @Service
 public class EmailService {
 
+    private static final Logger log = LoggerFactory.getLogger(EmailService.class);
+
     private final JavaMailSender mailSender;
+
+    @Value("${blog.site-url}")
+    private String siteUrl;
 
     public EmailService(@Autowired(required = false) JavaMailSender mailSender) {
         this.mailSender = mailSender;
@@ -26,7 +34,7 @@ public class EmailService {
 
                 请登录后台审核。
                 """, articleTitle, authorName, content));
-        try { mailSender.send(msg); } catch (Exception ignored) {}
+        try { mailSender.send(msg); } catch (Exception e) { log.warn("Failed to send comment notice email: {}", e.getMessage()); }
     }
 
     public void sendReplyNotice(String toEmail, String articleTitle, String replyContent) {
@@ -41,7 +49,7 @@ public class EmailService {
 
                 前往文章页面查看。
                 """, articleTitle, replyContent));
-        try { mailSender.send(msg); } catch (Exception ignored) {}
+        try { mailSender.send(msg); } catch (Exception e) { log.warn("Failed to send reply notice email: {}", e.getMessage()); }
     }
 
     public void sendVerifyEmail(String toEmail, String token) {
@@ -52,11 +60,11 @@ public class EmailService {
         msg.setText(String.format("""
                 感谢订阅 DKX's Blog！
 
-                确认链接：http://localhost:5173/api/subscribe/verify?token=%s
+                确认链接：%s/api/subscribe/verify?token=%s
 
                 如果这不是你本人的操作，请忽略此邮件。
-                """, token));
-        try { mailSender.send(msg); } catch (Exception ignored) {}
+                """, siteUrl, token));
+        try { mailSender.send(msg); } catch (Exception e) { log.warn("Failed to send verify email: {}", e.getMessage()); }
     }
 
     public void sendNewArticleNotice(String toEmail, String articleTitle, String articleId) {
@@ -69,10 +77,10 @@ public class EmailService {
 
                 《%s》
 
-                立即阅读：http://localhost:5173/article/%s
+                立即阅读：%s/article/%s
 
                 如需退订，请回复此邮件。
-                """, articleTitle, articleId));
-        try { mailSender.send(msg); } catch (Exception ignored) {}
+                """, articleTitle, siteUrl, articleId));
+        try { mailSender.send(msg); } catch (Exception e) { log.warn("Failed to send new article notice email: {}", e.getMessage()); }
     }
 }

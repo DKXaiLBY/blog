@@ -155,7 +155,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/store/user'
-import { getUserProfile, updateAvatar, updateProfile, changePassword } from '@/api/comment'
+import { getUserProfile, updateAvatar, updateProfile, changePassword } from '@/api/user'
 import request from '@/api/request'
 
 const router = useRouter()

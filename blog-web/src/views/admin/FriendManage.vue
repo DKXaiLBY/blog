@@ -70,7 +70,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { getAdminFriends, createFriend, updateFriend, deleteFriend, updateFriendStatus } from '@/api/comment'
+import { getAdminFriends, createFriend, updateFriend, deleteFriend, updateFriendStatus } from '@/api/friend'
 
 const friends = ref([])
 const dialogVisible = ref(false)

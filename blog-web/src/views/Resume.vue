@@ -84,7 +84,9 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { Message } from '@element-plus/icons-vue'
-import { getUserProfile, getCategories, getTags } from '@/api/comment'
+import { getUserProfile } from '@/api/user'
+import { getCategories } from '@/api/category'
+import { getTags } from '@/api/tag'
 import { getArticles } from '@/api/article'
 import { useSEO } from '@/composables/useSEO'
 

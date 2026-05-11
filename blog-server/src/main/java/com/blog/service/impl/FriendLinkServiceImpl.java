@@ -1,6 +1,7 @@
 package com.blog.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.blog.common.exception.NotFoundException;
 import com.blog.entity.FriendLink;
 import com.blog.mapper.FriendLinkMapper;
 import com.blog.service.FriendLinkService;
@@ -51,7 +52,7 @@ public class FriendLinkServiceImpl implements FriendLinkService {
     public void updateStatus(Long id, Integer status) {
         FriendLink link = friendLinkMapper.selectById(id);
         if (link == null) {
-            throw new RuntimeException("友链不存在");
+            throw new NotFoundException("友链不存在");
         }
         link.setStatus(status);
         friendLinkMapper.updateById(link);

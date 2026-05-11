@@ -190,7 +190,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { getDashboard } from '@/api/comment'
+import { getDashboard } from '@/api/user'
 
 const stats = ref({
   publishedArticles: 0,

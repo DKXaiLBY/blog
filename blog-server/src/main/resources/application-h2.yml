@@ -39,5 +39,10 @@ mybatis-plus:
       spec: expireAfterWrite=5m,maximumSize=200
 
 jwt:
-  secret: your-secret-key-at-least-256-bits-long-change-in-production-abc123
+  secret: ${JWT_SECRET:dev-secret-key-for-h2-local-development-only}
   expiration: 86400000
+
+blog:
+  site-url: ${BLOG_SITE_URL:http://localhost:5173}
+  cors:
+    allowed-origins: ${BLOG_CORS_ORIGINS:*}

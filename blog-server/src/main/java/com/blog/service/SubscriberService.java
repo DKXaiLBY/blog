@@ -1,6 +1,8 @@
 package com.blog.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.blog.common.exception.BadRequestException;
+import com.blog.common.exception.NotFoundException;
 import com.blog.entity.Subscriber;
 import com.blog.mapper.SubscriberMapper;
 import org.slf4j.Logger;
@@ -27,7 +29,7 @@ public class SubscriberService {
         LambdaQueryWrapper<Subscriber> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Subscriber::getEmail, email);
         if (subscriberMapper.selectCount(wrapper) > 0) {
-            throw new RuntimeException("该邮箱已订阅");
+            throw new BadRequestException("该邮箱已订阅");
         }
 
         Subscriber sub = new Subscriber();
@@ -49,7 +51,7 @@ public class SubscriberService {
         LambdaQueryWrapper<Subscriber> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Subscriber::getVerifyToken, token);
         Subscriber sub = subscriberMapper.selectOne(wrapper);
-        if (sub == null) throw new RuntimeException("无效的验证令牌");
+        if (sub == null) throw new BadRequestException("无效的验证令牌");
         sub.setVerified(1);
         sub.setVerifyToken(null);
         subscriberMapper.updateById(sub);

@@ -62,7 +62,7 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import { getFriends, applyFriend } from '@/api/comment'
+import { getFriends, applyFriend } from '@/api/friend'
 import { useSEO } from '@/composables/useSEO'
 import { ElMessage } from 'element-plus'
 

@@ -52,7 +52,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { getUserProfile } from '@/api/comment'
+import { getUserProfile } from '@/api/user'
 import { useSEO } from '@/composables/useSEO'
 
 const projects = ref([])
