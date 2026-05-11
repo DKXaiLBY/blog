@@ -105,20 +105,28 @@ blog/
 └── schema.sql                    # MySQL 建表脚本
 ```
 
-## Docker 部署
+## Docker 一键部署
 
 ```bash
-# 1. 构建后端 JAR
-cd blog-server && ./mvnw package -DskipTests
+# 1. 克隆项目
+git clone https://github.com/DKXaiLBY/blog.git
+cd blog
 
-# 2. 构建前端
-cd blog-web && npm install && npm run build
+# 2. (可选) 配置环境变量
+cp .env.example .env
+# 编辑 .env 修改密码和密钥
 
-# 3. 启动
-docker-compose up -d
+# 3. 一键启动
+docker compose up -d
 ```
 
-服务端口：`http://localhost` (80)，MySQL 数据持久化在 `mysql_data` 卷。
+首次启动会自动：构建后端 JAR → 构建前端 → 初始化数据库 → 启动服务。服务运行在 `http://your-server-ip`。
+
+> 需要安装 Docker 和 Docker Compose。如果你用 Windows/Mac 桌面版 Docker，已自带 Compose。**放心，这些操作不影响你的本地环境，完全是独立的容器运行。**
+
+## 本地开发
+
+### 启动后端（H2 内存数据库，免安装）
 
 ## API 概览
 

@@ -12,3 +12,6 @@ screenshot-*.png
 
 # Temp test scripts
 test_*.py
+
+# Environment
+.env

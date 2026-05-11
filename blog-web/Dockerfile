@@ -1,9 +1,14 @@
-# 前端 Vue 构建 + Nginx 部署
-# 构建：npm run build（在 blog-web 目录）
-# 镜像：docker build -t blog-web .
+# Stage 1: Build Vue app with Node
+FROM node:20-alpine AS builder
+WORKDIR /build
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
 
+# Stage 2: Serve with Nginx
 FROM nginx:alpine
-COPY dist/ /usr/share/nginx/html/
-COPY ../nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=builder /build/dist /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]

@@ -1,8 +1,6 @@
-# Docker Compose 一键部署
-# 使用：docker-compose up -d
-# 首次需要先构建镜像（见下方注释）
-
-version: '3.8'
+# docker-compose up -d
+# 首次启动自动构建前后端镜像 + 初始化数据库
+# 部署后访问 http://your-server-ip
 
 services:
   mysql:
@@ -17,8 +15,6 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
       - ./blog-server/src/main/resources/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
-    ports:
-      - "3306:3306"
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s
@@ -33,6 +29,7 @@ services:
       mysql:
         condition: service_healthy
     environment:
+      SPRING_PROFILES_ACTIVE: mysql
       MYSQL_HOST: mysql
       MYSQL_USER: root
       MYSQL_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
@@ -41,8 +38,8 @@ services:
       MAIL_PORT: ${MAIL_PORT:-587}
       MAIL_USERNAME: ${MAIL_USERNAME:-}
       MAIL_PASSWORD: ${MAIL_PASSWORD:-}
-    ports:
-      - "8080:8080"
+    volumes:
+      - uploads_data:/app/uploads
 
   blog-web:
     build: ./blog-web
@@ -55,3 +52,4 @@ services:
 
 volumes:
   mysql_data:
+  uploads_data:
