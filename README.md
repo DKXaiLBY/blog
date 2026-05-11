@@ -122,21 +122,57 @@ docker-compose up -d
 
 ## API 概览
 
+### 公开接口
+
 | 方法 | 路径 | 说明 |
 |------|------|------|
-| GET | `/api/articles?page=&size=&categoryId=` | 文章列表 |
-| GET | `/api/articles/search?keyword=` | 搜索 |
+| GET | `/api/articles` | 文章列表 `?page=&size=&categoryId=` |
+| GET | `/api/articles/search` | 搜索文章 `?keyword=` |
 | GET | `/api/articles/{id}` | 文章详情 |
-| GET | `/api/articles/{id}/comments` | 评论（含嵌套回复） |
+| GET | `/api/articles/{id}/related` | 相关文章 `?limit=3` |
+| GET | `/api/articles/{id}/comments` | 文章评论（含嵌套回复） |
+| GET | `/api/articles/archives` | 归档时间轴 |
 | POST | `/api/comments` | 发表评论 |
-| GET | `/api/categories` | 分类列表 |
-| GET | `/api/tags` | 标签列表 |
-| GET | `/api/rss` | RSS 订阅 |
-| GET | `/api/user/profile` | 博主信息 |
-| POST | `/api/auth/login` | 登录 |
-| GET/POST/PUT/DELETE | `/api/admin/*` | 后台管理（需 JWT） |
+| GET | `/api/captcha` | 获取数学验证码 |
+| GET | `/api/categories` | 分类列表（含文章计数） |
+| GET | `/api/tags` | 标签列表（含文章计数） |
+| GET | `/api/user/profile` | 博主信息（昵称/头像/简介/技能/项目） |
+| GET | `/api/featured` | 精选/最新文章 |
+| GET | `/api/friends` | 友链列表 |
+| POST | `/api/friends/apply` | 申请友链 |
 | POST | `/api/subscribe` | 邮件订阅 |
-| GET | `/api/sitemap.xml` | 网站地图 |
+| GET | `/api/subscribe/verify` | 确认订阅 `?token=` |
+| POST | `/api/unsubscribe` | 退订 |
+| GET | `/api/rss` | RSS 订阅源 |
+| GET | `/api/sitemap.xml` | SEO 网站地图 |
+
+### 后台接口（需 JWT，Header: `Authorization: Bearer <token>`）
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| POST | `/api/auth/login` | 登录，返回 token |
+| GET | `/api/admin/dashboard` | 仪表盘统计数据 |
+| GET | `/api/admin/articles` | 文章列表（含草稿）`?page=&size=&keyword=&status=` |
+| GET | `/api/admin/articles/{id}` | 文章详情（含草稿） |
+| POST | `/api/admin/articles` | 创建文章 |
+| PUT | `/api/admin/articles/{id}` | 更新文章 |
+| DELETE | `/api/admin/articles/{id}` | 删除文章 |
+| POST | `/api/admin/articles/batch-delete` | 批量删除 |
+| POST | `/api/admin/articles/batch-status` | 批量更新状态 |
+| GET | `/api/admin/comments` | 评论列表 `?page=&size=&articleId=&status=` |
+| PUT | `/api/admin/comments/{id}/status` | 审核评论 `?status=1/2` |
+| DELETE | `/api/admin/comments/{id}` | 删除评论 |
+| GET | `/api/admin/friends` | 友链列表（含待审核） |
+| POST | `/api/admin/friends` | 添加友链 |
+| PUT | `/api/admin/friends/{id}` | 编辑友链 |
+| DELETE | `/api/admin/friends/{id}` | 删除友链 |
+| PUT | `/api/admin/friends/{id}/status` | 审核友链 `?status=1/2` |
+| GET | `/api/admin/subscribers` | 订阅者列表 |
+| DELETE | `/api/admin/subscribers/{id}` | 删除订阅者 |
+| POST | `/api/admin/upload` | 上传封面图片 |
+| PUT | `/api/admin/user/profile` | 更新个人设置 |
+| PUT | `/api/admin/user/password` | 修改密码 |
+| PUT | `/api/admin/user/avatar` | 更新头像 |
 
 ## License
 
