@@ -8,7 +8,7 @@ skills-*.md
 .vscode/
 
 # Test screenshots
-*.png
+screenshot-*.png
 
 # Temp test scripts
 test_*.py
