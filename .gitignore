@@ -1,0 +1,9 @@
+# Claude Code internal
+.claude/
+.superpowers/
+
+# Test screenshots
+*.png
+
+# Temp test scripts
+test_*.py
