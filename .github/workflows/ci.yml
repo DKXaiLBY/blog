@@ -24,7 +24,7 @@ jobs:
           cache: maven
 
       - name: Build with Maven
-        run: ./mvnw compile -q
+        run: chmod +x mvnw && ./mvnw compile -q
 
   frontend:
     runs-on: ubuntu-latest
@@ -43,7 +43,7 @@ jobs:
           cache-dependency-path: blog-web/package-lock.json
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Build
         run: npm run build
