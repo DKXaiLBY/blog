@@ -20,17 +20,31 @@
       </el-select>
     </div>
 
-    <el-table :data="articles" stripe v-loading="loading" style="width:100%">
+    <!-- Batch actions -->
+    <div v-if="selectedIds.length" class="batch-bar">
+      <span>已选 {{ selectedIds.length }} 篇</span>
+      <el-button size="small" type="success" @click="batchPublish">批量发布</el-button>
+      <el-button size="small" type="danger" @click="batchDelete">批量删除</el-button>
+      <el-button size="small" text @click="selectedIds = []">取消选择</el-button>
+    </div>
+
+    <el-table :data="articles" stripe v-loading="loading" style="width:100%" @selection-change="onSelectionChange" ref="tableRef">
+      <el-table-column type="selection" width="42" />
       <el-table-column prop="title" label="标题" min-width="200">
         <template #default="{ row }">
           <span class="table-title" @click="goDetail(row.id)">{{ row.title }}</span>
         </template>
       </el-table-column>
       <el-table-column prop="categoryName" label="分类" width="100" />
+      <el-table-column label="字数" width="70">
+        <template #default="{ row }">
+          <span style="font-size:12px;color:var(--text-muted)">{{ wordCount(row.content) }}</span>
+        </template>
+      </el-table-column>
       <el-table-column label="状态" width="90">
         <template #default="{ row }">
-          <el-tag :type="row.isTop ? 'danger' : 'success'" size="small">
-            {{ row.isTop ? '置顶' : '已发布' }}
+          <el-tag :type="row.status === 0 ? 'info' : row.isTop ? 'danger' : 'success'" size="small">
+            {{ row.status === 0 ? '草稿' : row.isTop ? '置顶' : '已发布' }}
           </el-tag>
         </template>
       </el-table-column>
@@ -59,13 +73,15 @@
       />
     </div>
 
-    <!-- 编辑/新建对话框 -->
+    <!-- Edit/Create Dialog -->
     <el-dialog
       v-model="dialogVisible"
       :title="isEdit ? '编辑文章' : '写文章'"
       width="900px"
       top="5vh"
       destroy-on-close
+      @opened="onDialogOpened"
+      @close="onDialogClosed"
     >
       <el-form :model="form" label-width="60px">
         <el-form-item label="标题">
@@ -73,6 +89,18 @@
         </el-form-item>
         <el-form-item label="摘要">
           <el-input v-model="form.summary" type="textarea" :rows="2" placeholder="文章摘要（可选）" maxlength="300" />
+        </el-form-item>
+        <el-form-item label="封面">
+          <div style="display:flex; gap:8px; width:100%">
+            <el-input v-model="form.coverImage" placeholder="封面图片URL（可选）" maxlength="500" style="flex:1" />
+            <el-upload
+              :show-file-list="false"
+              :http-request="handleUpload"
+              accept="image/*"
+            >
+              <el-button :loading="uploading">上传</el-button>
+            </el-upload>
+          </div>
         </el-form-item>
         <el-form-item label="分类">
           <el-select v-model="form.categoryId" placeholder="选择分类" clearable>
@@ -84,6 +112,9 @@
             <el-option v-for="tag in allTags" :key="tag.id" :label="tag.name" :value="tag.id" />
           </el-select>
         </el-form-item>
+        <el-form-item label="系列">
+          <el-input v-model="form.series" placeholder="系列名称（可选，同系列文章将自动关联）" maxlength="100" />
+        </el-form-item>
         <el-form-item label="状态">
           <el-radio-group v-model="form.status">
             <el-radio :value="0">草稿</el-radio>
@@ -91,8 +122,18 @@
           </el-radio-group>
           <el-checkbox v-model="form.isTop" style="margin-left:16px" :true-value="1" :false-value="0">置顶</el-checkbox>
         </el-form-item>
+        <el-form-item v-if="form.status === 0" label="定时发布">
+          <el-date-picker
+            v-model="form.scheduledPublishAt"
+            type="datetime"
+            placeholder="选择定时发布时间（可选）"
+            format="YYYY-MM-DD HH:mm"
+            value-format="YYYY-MM-DDTHH:mm:ss"
+            style="width:280px"
+          />
+        </el-form-item>
         <el-form-item label="内容">
-          <v-md-editor v-model="form.content" height="400px" />
+          <v-md-editor ref="editorRef" v-model="form.content" height="400px" @upload-image="handleEditorUpload" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -106,11 +147,12 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { getArticles, getArticleDetail, createArticle, updateArticle, deleteArticle, searchArticles } from '@/api/article'
+import { getAdminArticles, getAdminArticleDetail, createArticle, updateArticle, deleteArticle, batchDeleteArticles, batchUpdateStatus } from '@/api/article'
 import { getCategories, getTags } from '@/api/comment'
-import { ElMessage } from 'element-plus'
+import request from '@/api/request'
+import { ElMessage, ElMessageBox } from 'element-plus'
 
 const router = useRouter()
 const articles = ref([])
@@ -123,18 +165,28 @@ const keyword = ref('')
 const statusFilter = ref(null)
 const loading = ref(false)
 const saving = ref(false)
+const uploading = ref(false)
+const editorRef = ref(null)
+const tableRef = ref(null)
 const dialogVisible = ref(false)
 const isEdit = ref(false)
 const editingId = ref(null)
+const selectedIds = ref([])
+
+let draftTimer = null
+const DRAFT_KEY = 'blog-draft-article'
 
 const defaultForm = () => ({
   title: '',
   summary: '',
   content: '',
+  coverImage: '',
   categoryId: null,
   tagIds: [],
+  series: '',
   status: 1,
-  isTop: 0
+  isTop: 0,
+  scheduledPublishAt: ''
 })
 const form = ref(defaultForm())
 
@@ -143,15 +195,18 @@ const fmtDate = (s) => {
   return s.replace('T', ' ').substring(0, 16)
 }
 
+const wordCount = (content) => {
+  if (!content) return 0
+  return content.replace(/[#*\-\s`>\[\]()!|~\\n]/g, '').length
+}
+
 const fetchArticles = async () => {
   loading.value = true
   try {
-    let res
-    if (keyword.value.trim()) {
-      res = await searchArticles({ keyword: keyword.value.trim(), page: page.value, size })
-    } else {
-      res = await getArticles({ page: page.value, size })
-    }
+    const params = { page: page.value, size }
+    if (keyword.value.trim()) params.keyword = keyword.value.trim()
+    if (statusFilter.value !== null && statusFilter.value !== '') params.status = statusFilter.value
+    const res = await getAdminArticles(params)
     articles.value = res.data.records
     total.value = res.data.total
   } catch { /* handled */ }
@@ -166,6 +221,55 @@ const fetchMeta = async () => {
 
 const goDetail = (id) => router.push(`/article/${id}`)
 
+const saveDraft = () => {
+  if (!dialogVisible.value) return
+  if (!form.value.title.trim() && !form.value.content.trim()) return
+  try {
+    localStorage.setItem(DRAFT_KEY, JSON.stringify({
+      ...form.value,
+      editingId: editingId.value,
+      isEdit: isEdit.value,
+      savedAt: new Date().toISOString()
+    }))
+  } catch { /* ignore */ }
+}
+
+const restoreDraft = () => {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY)
+    if (!raw) return null
+    const draft = JSON.parse(raw)
+    if (!draft.title && !draft.content) return null
+    return draft
+  } catch { return null }
+}
+
+const clearDraft = () => {
+  localStorage.removeItem(DRAFT_KEY)
+}
+
+const onDialogOpened = () => {
+  draftTimer = setInterval(saveDraft, 30000)
+  // Ctrl+S shortcut
+  const onKeyDown = (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+      e.preventDefault()
+      handleSave()
+    }
+  }
+  document.addEventListener('keydown', onKeyDown)
+  // Store cleanup ref
+  form.value._keydownCleanup = () => document.removeEventListener('keydown', onKeyDown)
+}
+
+const onDialogClosed = () => {
+  if (draftTimer) { clearInterval(draftTimer); draftTimer = null }
+  if (form.value._keydownCleanup) {
+    form.value._keydownCleanup()
+    delete form.value._keydownCleanup
+  }
+}
+
 const openCreate = () => {
   isEdit.value = false
   editingId.value = null
@@ -176,16 +280,19 @@ const openCreate = () => {
 const openEdit = async (row) => {
   isEdit.value = true
   editingId.value = row.id
-  const res = await getArticleDetail(row.id)
+  const res = await getAdminArticleDetail(row.id)
   const detail = res.data
   form.value = {
     title: detail.title,
     summary: detail.summary || '',
     content: detail.content || '',
-    categoryId: null,
-    tagIds: [],
-    status: 1,
-    isTop: detail.isTop ?? 0
+    coverImage: detail.coverImage || '',
+    categoryId: detail.categoryId ?? null,
+    tagIds: detail.tagIds ?? [],
+    series: detail.series || '',
+    status: detail.status ?? 1,
+    isTop: detail.isTop ?? 0,
+    scheduledPublishAt: detail.scheduledPublishAt || ''
   }
   dialogVisible.value = true
 }
@@ -204,6 +311,7 @@ const handleSave = async () => {
       await createArticle(form.value)
       ElMessage.success('发布成功')
     }
+    clearDraft()
     dialogVisible.value = false
     fetchArticles()
   } catch { /* handled */ }
@@ -218,9 +326,98 @@ const handleDelete = async (id) => {
   } catch { /* handled */ }
 }
 
+const onSelectionChange = (rows) => {
+  selectedIds.value = rows.map(r => r.id)
+}
+
+const batchDelete = async () => {
+  try {
+    await ElMessageBox.confirm(`确定删除选中的 ${selectedIds.value.length} 篇文章?`, '批量删除', { type: 'warning' })
+    await batchDeleteArticles(selectedIds.value)
+    ElMessage.success('批量删除成功')
+    selectedIds.value = []
+    fetchArticles()
+  } catch { /* cancelled or error */ }
+}
+
+const batchPublish = async () => {
+  try {
+    await batchUpdateStatus(selectedIds.value, 1)
+    ElMessage.success('批量发布成功')
+    selectedIds.value = []
+    fetchArticles()
+  } catch { /* handled */ }
+}
+
+const handleUpload = async (option) => {
+  uploading.value = true
+  try {
+    const formData = new FormData()
+    formData.append('file', option.file)
+    const res = await request.post('/admin/upload', formData)
+    if (res.data?.url) {
+      form.value.coverImage = res.data.url
+      ElMessage.success('上传成功')
+    }
+  } catch {
+    ElMessage.error('上传失败')
+  }
+  finally { uploading.value = false }
+}
+
+const handleEditorUpload = async (event, insertImage, files) => {
+  const file = files instanceof File ? files : (files?.[0] || event?.clipboardData?.files?.[0])
+  if (!file) return
+  try {
+    const formData = new FormData()
+    formData.append('file', file)
+    const res = await request.post('/admin/upload', formData)
+    if (res.data?.url) {
+      insertImage({ url: res.data.url })
+    }
+  } catch {
+    ElMessage.error('图片上传失败')
+  }
+}
+
+// Check for draft restore when entering create mode
+watch(dialogVisible, (val) => {
+  if (val && !isEdit.value) {
+    const draft = restoreDraft()
+    if (draft) {
+      ElMessageBox.confirm('检测到未保存的草稿，是否恢复?', '恢复草稿', {
+        confirmButtonText: '恢复',
+        cancelButtonText: '忽略',
+        type: 'info'
+      }).then(() => {
+        form.value = {
+          title: draft.title || '',
+          summary: draft.summary || '',
+          content: draft.content || '',
+          coverImage: draft.coverImage || '',
+          categoryId: draft.categoryId ?? null,
+          tagIds: draft.tagIds ?? [],
+          series: draft.series || '',
+          status: draft.status ?? 1,
+          isTop: draft.isTop ?? 0
+        }
+        isEdit.value = draft.isEdit || false
+        editingId.value = draft.editingId || null
+        ElMessage.success('草稿已恢复')
+      }).catch(() => {
+        clearDraft()
+      })
+    }
+  }
+})
+
 onMounted(() => {
   fetchArticles()
   fetchMeta()
+})
+
+onUnmounted(() => {
+  if (draftTimer) clearInterval(draftTimer)
 })
 </script>
 
@@ -241,6 +438,19 @@ onMounted(() => {
 .admin-toolbar {
   display: flex;
   margin-bottom: 16px;
+}
+
+.batch-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: var(--accent-bg);
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: var(--accent);
 }
 
 .table-title {
