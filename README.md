@@ -122,7 +122,7 @@ docker compose up -d
 
 首次启动会自动：构建后端 JAR → 构建前端 → 初始化数据库 → 启动服务。服务运行在 `http://your-server-ip`。
 
-> 需要安装 Docker 和 Docker Compose。如果你用 Windows/Mac 桌面版 Docker，已自带 Compose。**放心，这些操作不影响你的本地环境，完全是独立的容器运行。**
+> 需要安装 Docker 和 Docker Compose。更多部署方式（宝塔面板、手动部署、阿里云、Vercel 等）见 **[DEPLOY.md](DEPLOY.md)**
 
 ## 本地开发
 
