@@ -13,4 +13,6 @@ public class ArticleRequest {
     private List<Long> tagIds;
     private Integer status;
     private Integer isTop;
+    private String series;
+    private String scheduledPublishAt;
 }

@@ -7,19 +7,12 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Data
-@TableName("blog_user")
-public class User {
+@TableName("blog_subscriber")
+public class Subscriber {
     @TableId(type = IdType.AUTO)
     private Long id;
-    private String username;
-    private String password;
-    private String nickname;
-    private String avatar;
-    private String tagline;
-    private String bio;
-    private String skills;
-    private String contacts;
-    private String projects;
-    private String announcement;
+    private String email;
+    private Integer verified; // 0=unverified, 1=verified
+    private String verifyToken;
     private LocalDateTime createdAt;
 }

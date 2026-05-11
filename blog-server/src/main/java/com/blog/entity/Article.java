@@ -20,8 +20,11 @@ public class Article {
     private Long categoryId;
     private Long authorId;
     private Integer viewCount;
+    private Integer likeCount;
     private Integer status;
     private Integer isTop;
+    private String series;
+    private LocalDateTime scheduledPublishAt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 

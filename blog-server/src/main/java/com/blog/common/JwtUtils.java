@@ -48,6 +48,23 @@ public class JwtUtils {
         }
     }
 
+    public String generateCaptchaToken(int answer) {
+        Date now = new Date();
+        Date expiry = new Date(now.getTime() + 120_000); // 2 min
+        return Jwts.builder()
+                .subject("captcha")
+                .claim("answer", answer)
+                .issuedAt(now)
+                .expiration(expiry)
+                .signWith(key)
+                .compact();
+    }
+
+    public int validateCaptchaToken(String token) {
+        Claims claims = parseToken(token);
+        return claims.get("answer", Integer.class);
+    }
+
     private Claims parseToken(String token) {
         return Jwts.parser()
                 .verifyWith(key)

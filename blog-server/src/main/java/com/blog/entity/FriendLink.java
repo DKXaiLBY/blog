@@ -7,19 +7,14 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Data
-@TableName("blog_user")
-public class User {
+@TableName("blog_friend_link")
+public class FriendLink {
     @TableId(type = IdType.AUTO)
     private Long id;
-    private String username;
-    private String password;
-    private String nickname;
-    private String avatar;
-    private String tagline;
-    private String bio;
-    private String skills;
-    private String contacts;
-    private String projects;
-    private String announcement;
+    private String name;
+    private String url;
+    private String description;
+    private Integer sortOrder;
+    private Integer status;
     private LocalDateTime createdAt;
 }

@@ -16,7 +16,9 @@ public class Comment {
     private Long articleId;
     private Long parentId;
     private String authorName;
+    private String email;
     private String content;
+    private Integer status; // 0=pending, 1=approved, 2=rejected
     private LocalDateTime createdAt;
 
     @TableField(exist = false)
