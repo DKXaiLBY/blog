@@ -24,6 +24,28 @@
 - **SEO**：Sitemap、Open Graph、Twitter Card
 - **移动端**：汉堡菜单、响应式布局
 
+## 界面预览
+
+### 前台
+
+| 门户页 | 文章列表 |
+|--------|---------|
+| ![门户欢迎页](docs/screenshots/01-welcome.png) | ![文章列表](docs/screenshots/02-home.png) |
+
+| 文章详情 | 归档时间轴 |
+|----------|-----------|
+| ![文章详情](docs/screenshots/09-article-detail.png) | ![归档](docs/screenshots/03-archive.png) |
+
+| 关于/简历 | 登录页 | 项目展示 |
+|-----------|--------|----------|
+| ![关于](docs/screenshots/04-about.png) | ![登录](docs/screenshots/05-login.png) | ![项目](docs/screenshots/06-projects.png) |
+
+### 后台
+
+| 仪表盘 | 文章管理 |
+|--------|---------|
+| ![仪表盘](docs/screenshots/07-dashboard.png) | ![文章管理](docs/screenshots/08-article-manage.png) |
+
 ## 快速开始
 
 ### 环境要求
